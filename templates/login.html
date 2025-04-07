@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <form class="form_page" action="/login" method="post">
+        <h3>Accede a tus Cursos!</h3>
+
+        <input type="text" placeholder="Email" id="email" name="email"value="{{ request.form.get('email', '') }}">
+
+        <div class="input-group password-group">
+            <input type="password" id="password" name="password" value="{{ request.form.get('password', '') }}" placeholder="Password">
+            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <button type="submit">Inicia Sesión</button>
+        <div class="social row align-items-start">
+            <div class="fb"><i class="fab fa-google"></i></div>
+            <div class="fb"><i class="fab fa-facebook"></i></div>
+        </div>
+    </form>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling.querySelector('i');
+            if (field.type === "password") {
+                field.type = "text";
+                button.classList.remove("fa-eye");
+                button.classList.add("fa-eye-slash");
+            } else {
+                field.type = "password";
+                button.classList.remove("fa-eye-slash");
+                button.classList.add("fa-eye");
+            }
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Subjects
+{% endblock %}
+
+{% block main %}
+    <div class="mb-3">
+        <h3>Subjects available</h3>
+    </div>
+    <div class="mb-3">
+            <table>
+                <thead>
+                    <tr class="high">
+                        <th>Name <input class="filter" type="text" id="filterName" placeholder="filter"></th>
+                        <th>Faculty <input class="filter" type="text" id="filterFaculty" placeholder="filter"></th>
+                        <th>Semester</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for subject in subjects %}
+                        <tr>
+                            <td>{{ subject['name'] }}</td>
+                            <td>{{ subject['field'] }}</td>
+                            <td>{{ subject['semester'] }}</td>
+                            <td>
+                                <form action="/subjects" method="post">
+                                    <input type="hidden" name="selected" value="{{ subject['id'] }}">
+                                    <input class="enroll" type="submit" value="Select">
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+    </div>
+
+    <script>
+        const filterName = document.getElementById('filterName');
+        const filterFaculty = document.getElementById('filterFaculty');
+        // ... otros elementos de filtro ...
+      
+        function filterTable() {
+          const rows = document.querySelectorAll('table tbody tr');
+          const nameFilter = filterName.value.toLowerCase();
+          const facultyFilter = filterFaculty.value.toLowerCase();
+      
+          rows.forEach(row => {
+            const nameCell = row.cells[0]; // Ajusta el índice si la columna de nombre no es la tercera
+            const facultyCell = row.cells[1]; // Ajusta el índice si la columna de facultad no es la cuarta
+            const nameMatch = nameCell.textContent.toLowerCase().includes(nameFilter);
+            const facultyMatch = facultyCell.textContent.toLowerCase().includes(facultyFilter);
+      
+            row.style.display = nameMatch && facultyMatch ? '' : 'none';
+          });
+        }
+      
+        // Asignar event listeners a todos los campos de filtro
+        filterName.addEventListener('keyup', filterTable);
+        filterFaculty.addEventListener('keyup', filterTable);
+        // ... otros event listeners ...
+    </script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form class="form_page" method="POST" action="/register">
+        <input type="text"      id="names"          name="names"        value="{{ request.form.get('names', '') }}"         placeholder="Names">
+        <input type="text"      id="surnames"       name="surnames"     value="{{ request.form.get('surnames', '') }}"      placeholder="Surnames">
+        <input type="email"     id="email"          name="email"        value="{{ request.form.get('email', '') }}"         placeholder="Email">
+
+        <div class="input-group password-group">
+            <input type="password" id="password" name="password" value="{{ request.form.get('password', '') }}" placeholder="Password">
+            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+        <div class="input-group password-group">
+            <input type="password" id="confirmation" name="confirmation" value="{{ request.form.get('confirmation', '') }}" placeholder="Confirm Password">
+            <button type="button" class="toggle-password" onclick="togglePassword('confirmation')">
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling.querySelector('i');
+            if (field.type === "password") {
+                field.type = "text";
+                button.classList.remove("fa-eye");
+                button.classList.add("fa-eye-slash");
+            } else {
+                field.type = "password";
+                button.classList.remove("fa-eye-slash");
+                button.classList.add("fa-eye");
+            }
+        }
+    </script>
+{% endblock %}

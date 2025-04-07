@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add Subjects
+{% endblock %}
+
+{% block main %}
+    <div class="mb-3">
+        <h3>Subjects available</h3>
+    </div>
+    <div class="mb-3">
+        <table>
+            <thead>
+                <tr class="high">
+                    <th>Name</th>
+                    <th>Semester</th>
+                    <th>Credits</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for subject in subjects_available %}
+                    <tr>
+                        <td>{{ subject['name'] }}</td>
+                        <td>{{ subject['semester'] }}</td>
+                        <td>{{ subject['credits'] }}</td>
+                        <td>
+                            <form action="/add_subjects" method="post">
+                                <input class="enroll" type="hidden" name="selected" value="{{ subject['id'] }}">
+                                <input class="enroll" type="submit" value="Enroll">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
