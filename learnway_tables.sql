@@ -13,7 +13,7 @@ CREATE TABLE courses (
     title TEXT NOT NULL,
     card_description TEXT NOT NULL,
     preview_description TEXT NOT NULL,
-    course_picture BLOB,
+    course_img TEXT,
     PRIMARY KEY(id)
 );
 
@@ -33,6 +33,7 @@ CREATE TABLE comments (
     course_id INTEGER NOT NULL,
     comment TEXT NOT NULL,
     rating INTEGER NOT NULL,
+    PRIMARY KEY(id)
     FOREIGN KEY(user_id) REFERENCES users(id)
     FOREIGN KEY(course_id) REFERENCES courses(id)
 );

@@ -72,3 +72,19 @@
 -- JOIN students ON evaluated.student_id = students.id
 -- WHERE evaluated.strategy_id = ?
 
+-- UPDATE courses
+-- SET course_img = 'https://www.masterseosem.com/images/etiquetas-html.webp'
+-- WHERE id = 2;
+
+-- DROP TABLE comments;
+
+CREATE TABLE comments (
+    id INTEGER,
+    user_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    comment TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    PRIMARY KEY(id)
+    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY(course_id) REFERENCES courses(id)
+);

@@ -6,48 +6,36 @@
 
 {% block main %}
     <!-- Imagen de fondo con el título del curso -->
-    <div class="course-header" style="background-image: url('https://images.pexels.com/photos/1509534/pexels-photo-1509534.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');">
+    <div class="course-header" style="background-image: url('{{ course_preview[0]['course_img'] }}');">
         <div class="course-header-overlay">
-            <h1 class="course-title">Course Title</h1>
+            <h1 class="course-title">{{ course_preview[0]['title'] }}</h1>
         </div>
     </div>
 
     <!-- Descripción del curso -->
     <div class="course-description container mt-5">
         <h3>About this course</h3>
-        <p>
-            This course provides an in-depth exploration of the subject. You'll learn strategies, techniques, and concepts that will help you master the topic. Whether you're a beginner or looking to enhance your skills, this course is designed to meet your needs.
-        </p>
+        <p>{{ course_preview[0]['preview_description'] }}</p>
     </div>
 
     <!-- Contenido del curso -->
     <div class="course-content container mt-5">
         <h3>Contenido del curso</h3>
         <div class="accordion" id="courseContentAccordion">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        Módulo 1: Introducción
-                    </button>
-                </h2>
-                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#courseContentAccordion">
-                    <div class="accordion-body">
-                        Una introducción al curso y sus objetivos principales.
+            {% for module in course_modules %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ module['order_course'] }}">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module['order_course'] }}" aria-expanded="true" aria-controls="collapse{{ module['order_course'] }}">
+                            Módulo {{ module['order_course'] }}: {{ module['module_title'] }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ module['order_course'] }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ module['order_course'] }}" data-bs-parent="#courseContentAccordion">
+                        <div class="accordion-body">
+                            {{ module['info'] }}
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        Módulo 2: Conceptos básicos
-                    </button>
-                </h2>
-                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#courseContentAccordion">
-                    <div class="accordion-body">
-                        Aprenderás los fundamentos necesarios para avanzar en el curso.
-                    </div>
-                </div>
-            </div>
+            {% endfor %}
             <!-- Agrega más módulos según sea necesario -->
         </div>
     </div>
@@ -55,10 +43,10 @@
     <!-- Botón para inscribirse -->
     <div class="container text-center mt-5">
         {% if session["user_id"] %}
-            <a href="/enroll" class="btn btn-primary btn-lg">Quiero inscribirme/acceder a este curso</a>
+            <a href="/enroll" class="btn btn-primary btn-lg" id="btn_preview">Quiero inscribirme/acceder a este curso</a>
         {% else %}
             <p class="text-danger">Debes iniciar sesión para inscribirte en este curso.</p>
-            <a href="/login" class="btn btn-secondary btn-lg">Iniciar sesión</a>
+            <a href="/login" class="btn btn-secondary btn-lg" id="btn_preview">Iniciar sesión</a>
         {% endif %}
     </div>
 
@@ -66,7 +54,8 @@
     <div class="course-reviews container mt-5">
         <h3>Reseñas y comentarios</h3>
         {% if session["user_id"] %}
-            <form method="POST" action="/submit_review">
+            <form class="form_comment" method="POST" action="/course_preview/{{ course_preview[0]['id'] }}">
+                <input type="hidden" name="course_id" value="{{ course_preview[0]['id'] }}">
                 <div class="mb-3">
                     <label for="rating" class="form-label">Calificación:</label>
                     <select id="rating" name="rating" class="form-select">
@@ -81,24 +70,24 @@
                     <label for="comment" class="form-label">Comentario:</label>
                     <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Escribe tu opinión sobre el curso"></textarea>
                 </div>
-                <button type="submit" class="btn btn-success">Enviar reseña</button>
+                <button type="submit">Enviar reseña</button>
             </form>
         {% else %}
             <p class="text-danger">Debes iniciar sesión para dejar una reseña.</p>
-            <a href="/login" class="btn btn-secondary">Iniciar sesión</a>
+            <a href="/login" class="btn btn-secondary" id="btn_preview">Iniciar sesión</a>
         {% endif %}
 
         <!-- Lista de reseñas existentes -->
         <div class="mt-4">
             <h4>Reseñas de otros usuarios:</h4>
             <ul class="list-group">
-                <li class="list-group-item">
-                    <strong>Usuario 1:</strong> Excelente curso, aprendí mucho. <span class="badge bg-success">5/5</span>
-                </li>
-                <li class="list-group-item">
-                    <strong>Usuario 2:</strong> Muy bueno, pero podría mejorar en algunos aspectos. <span class="badge bg-warning">4/5</span>
-                </li>
-                <!-- Agrega más reseñas dinámicamente -->
+                {% for comment in comments %}
+                    <li class="list-group-item">
+                        <strong>{{ comment['names'] }} {{ comment['surnames'] }}:</strong> 
+                        {{ comment['comment'] }} 
+                        <span class="badge bg-success">{{ comment['rating'] }}/5</span>
+                    </li>
+                {% endfor %}
             </ul>
         </div>
     </div>

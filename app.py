@@ -43,7 +43,11 @@ def index():
     
     else:
 
-        return render_template("index.html")
+        courses = db.execute("""
+            SELECT id, title, card_description, course_img
+            FROM courses                     
+        """)
+        return render_template("index.html", courses=courses)
     
 
 @app.route("/register", methods=["GET", "POST"])
@@ -125,22 +129,58 @@ def login():
         return render_template("login.html")
 
 
-@app.route("/course_preview", methods=["GET", "POST"])
-def course_preview():
-    # List of students who are studying the selected subject
+@app.route("/course_preview/<int:course_id>", methods=["GET", "POST"])
+def course_preview(course_id):
     if request.method == "POST":
+        # Obtener los datos del formulario
+        rating = request.form.get("rating")
+        comment = request.form.get("comment")
+        course_id_form = request.form.get("course_id")
 
-        return redirect("/course_preview")
-    
-    else:  
-        # Course pre-view info
-        # list_strategies = db.execute("""
-        #     SELECT id, type, topic, percentage, date
-        #     FROM strategies
-        # """)
-        # session.get("subject_strategy"), session["user_id"]
+        # Validar que los campos no estén vacíos
+        if not rating or not comment:
+            flash("All fields must be filled!", "error")
+            return redirect(f"/course_preview/{course_id}")
 
-        return render_template("course_preview.html")
+        # Insertar la reseña en la base de datos
+        db.execute("""
+            INSERT INTO comments (user_id, course_id, comment, rating)
+            VALUES (?, ?, ?, ?)
+        """, session["user_id"], course_id_form, comment, int(rating))
+
+        flash("Review submitted successfully!", "success")
+        return redirect(f"/course_preview/{course_id}")
+
+    else:
+        # Obtener información del curso
+        course_preview = db.execute("""
+            SELECT id, title, preview_description, course_img
+            FROM courses
+            WHERE id = ?                        
+        """, course_id)
+
+        # Validar si el curso existe
+        if not course_preview:
+            flash("Course not found!", "error")
+            return redirect("/")
+
+        # Obtener los módulos del curso
+        course_modules = db.execute("""
+            SELECT order_course, module_title, info
+            FROM modules
+            WHERE course_id = ?
+            ORDER BY order_course                        
+        """, course_id)
+
+        # Obtener los comentarios existentes
+        comments = db.execute("""
+            SELECT users.names, users.surnames, comments.comment, comments.rating
+            FROM comments
+            JOIN users ON comments.user_id = users.id
+            WHERE comments.course_id = ?                                        
+        """, course_id)
+
+        return render_template("course_preview.html", course_preview=course_preview, course_modules=course_modules, comments=comments)
 
 @app.route("/grades", methods=["GET", "POST"])
 @login_required
