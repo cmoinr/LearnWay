@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}Ajustes de Perfil{% endblock %}
+
+{% block main %}
+    <h3 class="mb-4">Ajustes de mi perfil</h2>
+    <form class="form_page" method="POST" action="/profile_settings" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="profileImage" class="form-label">Cambiar mi foto de perfil</label><br>
+            <img src="{{ user[0]['profile_img'] }}" alt="Profile Picture" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+        </div>
+        <div class="mb-3">
+            <!-- Input oculto -->
+            <input type="file" id="profile_img_file" name="profile_img" style="display: none;" onchange="updateFileName()">                      
+            <!-- Botón personalizado -->
+            <label for="profile_img_file" id="profile_img_input">
+                Seleccionar archivo
+                <div> 
+                    <!-- Mostrar el nombre del archivo seleccionado -->
+                    <span id="file_name" class="text-muted">Ningún archivo seleccionado</span>
+                </div>
+            </label>
+        </div>
+        <div class="mb-3">
+            <label for="firstName" class="form-label">Nombres</label>
+            <input type="text" id="names" name="names" value="{{ user[0]['names'] }}">
+        </div>
+        <div class="mb-3">
+            <label for="lastName" class="form-label">Apellidos</label>
+            <input type="text" id="surnames" name="surnames" value="{{ user[0]['surnames'] }}">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Correo</label>
+            <input type="email" id="email" name="email" value="{{ user[0]['email'] }}">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Nueva Contraseña (opcional)</label>
+            <input type="text" id="password" name="password">
+        </div>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <script>
+        function updateFileName() {
+            const input = document.getElementById('profile_img_file');
+            const fileName = input.files.length > 0 ? input.files[0].name : "Ningún archivo seleccionado";
+            document.getElementById('file_name').textContent = fileName;
+        }
+    </script>
+{% endblock %}

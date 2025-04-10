@@ -38,17 +38,20 @@
                 <div class="collapse navbar-collapse" id="navbar">
                     {% if session["user_id"] %}                       
                         <ul class="navbar-nav me-auto mt-2">
-                            <li class="nav-item"><a class="nav-link" href="/subjects">Mis Cursos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/settings">Ajustes</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/my_learning">Mi Aprendizaje</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/creating">Crear Curso</a></li>
                         </ul>
                         <ul class="navbar-nav ms-auto mt-2">
                             <li class="nav-item"><a class="nav-link" id="user_options">Hola, {{ session["names"] }}</a></li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/profile">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <img src="{{ session['profile_img'] }}" alt="Profile Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                 </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                    <li><a class="dropdown-item" href="/profile_settings">Ajustes de mi perfil</a></li>
+                                    <li><a class="dropdown-item" href="/logout">Cerrar Sesion</a></li>
+                                </ul>
                             </li>
-                            <li class="nav-item"><a class="nav-link" id="user_options" href="/logout">Cerrar Sesion</a></li>
                         </ul>
                     {% else %}
                         <ul class="navbar-nav me-auto mt-2">

@@ -57,28 +57,27 @@
             </div>
         </div>
     </div>
-
     <!-- Filas dinámicas -->
     <div class="mb-3">
-        {% for i in range(0, courses|length, 3) %}
-        <div class="row align-items-start" id="services">
-            {% for course in courses[i:i+3] %}
-            <div class="col-md-4 d-flex">
+      {% for i in range(0, courses|length, 3) %}
+      <div class="row align-items-start" id="services">
+          {% for course in courses[i:i+3] %}
+          <div class="col-md-4 d-flex">
               <div class="card" style="width: 100%;" id="service">
-                <img style="width:400px; height:250px;"
-                    src="{{ course['course_img'] }}"
-                    class="d-block w-100"
-                    alt="{{ course['title'] }}"
-                    id="card_img">
-                <div class="card-body">
+              <img style="width:400px; height:250px;"
+                  src="{{ course['course_img'] }}"
+                  class="d-block w-100"
+                  alt="{{ course['title'] }}"
+                  id="card_img">
+              <div class="card-body">
                   <h4 class="card-title">{{ course.title }}</h4>
                   <h5 class="card-text">{{ course.card_description }}</h5>
                   <a href="/course_preview/{{ course.id }}" class="btn" id="btn_service">Inscribirme</a>
-                </div>
               </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endfor %}
-    </div>
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+      {% endfor %}
+  </div>
 {% endblock %}

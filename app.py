@@ -182,6 +182,98 @@ def course_preview(course_id):
 
         return render_template("course_preview.html", course_preview=course_preview, course_modules=course_modules, comments=comments)
 
+
+@app.route('/profile_settings', methods=['GET', 'POST'])
+@login_required
+def profile_settings():
+    if request.method == "POST":
+        # Obtener los datos enviados por el formulario
+        first_name = request.form.get('names')
+        last_name = request.form.get('surnames')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        profile_img = request.files.get('profile_img')
+
+        # Validar y actualizar solo los campos enviados
+        updates = {}
+        if first_name:
+            updates['names'] = first_name
+        if last_name:
+            updates['surnames'] = last_name
+        if email:
+            updates['email'] = email
+        if password:
+            # Generar un hash para la nueva contraseña
+            updates['hash'] = generate_password_hash(password, method='scrypt', salt_length=16)
+        if profile_img:
+            if not profile_img.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                flash("Formato de imagen no válido. Solo se permiten archivos PNG, JPG o JPEG.", "error")
+                return redirect(url_for('profile_settings'))
+            # Guardar la imagen en la carpeta uploads
+            filename = f"{session['user_id']}_{profile_img.filename}"
+            filepath = os.path.join("static/uploads", filename)
+            profile_img.save(filepath)
+            # Guardar la ruta relativa en la base de datos
+            updates['profile_img'] = f"/static/uploads/{filename}"
+
+
+        # Construir la consulta SQL dinámicamente
+        if updates:
+            set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
+            values = list(updates.values())
+            values.append(session["user_id"])  # Agregar el user_id al final para el WHERE
+            db.execute(f"UPDATE users SET {set_clause} WHERE id = ?", *values)
+
+        # Actualizar la sesión con los nuevos datos
+        if 'names' in updates:
+            session['names'] = f"{updates.get('names', session['names'])} {updates.get('surnames', '').strip()}"
+        if 'profile_img' in updates:
+            session['profile_img'] = updates['profile_img']
+
+        flash("Perfil actualizado exitosamente", "success")
+        return redirect(url_for('profile_settings'))
+
+    else:
+        # Obtener información de perfil del usuario
+        user = db.execute("""
+            SELECT names, surnames, email, profile_img
+            FROM users
+            WHERE id = ?                        
+        """, session["user_id"])
+
+        return render_template('profile_settings.html', user=user)
+
+
+@app.route("/logout")
+def logout():
+    """Log user out"""
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
+
+
+@app.route("/my_learning", methods=["GET", "POST"])
+@login_required
+def subjects():
+    if request.method == "POST":
+
+        return redirect("/")
+        
+    else:  
+
+        my_courses = db.execute("""
+            SELECT enrolled.course_id, courses.title, courses.card_description, courses.course_img
+            FROM enrolled
+            JOIN courses ON enrolled.course_id = courses.id
+            WHERE enrolled.course_id = ?
+        """, session["user_id"])
+
+        return render_template("my_learning.html", my_courses=my_courses)
+
+
 @app.route("/grades", methods=["GET", "POST"])
 @login_required
 def grades():
@@ -222,7 +314,6 @@ def grades():
 
         return render_template("grades.html", list_students=list_students, subject_name=subject_name)
     
-
 
 @app.route("/strategies_grades", methods=["GET", "POST"])
 @login_required
@@ -270,6 +361,7 @@ def strategies_grades():
         """, session.get("strategy_id"))
 
         return render_template("strategies_grades.html", list_students=list_students, strategy_selected=strategy_selected)
+
 
 @app.route("/student")
 @login_required
@@ -341,62 +433,6 @@ def add_subjects():
 
         return render_template("add_subjects.html", subjects_available=subjects_available)
 
-
-
-
-
-@app.route("/logout")
-def logout():
-    """Log user out"""
-
-    # Forget any user_id
-    session.clear()
-
-    # Redirect user to login form
-    return redirect("/")
-
-
-@app.route("/subjects", methods=["GET", "POST"])
-@login_required
-def subjects():
-    if request.method == "POST":
-
-        selected = request.form.get("selected")
-
-        teaching = db.execute("""
-            SELECT subject_id
-            FROM teaching
-            WHERE teacher_id = ?
-            AND subject_id = ?
-        """, session["user_id"], selected)
-
-        already = db.execute("""
-            SELECT subject_id
-            FROM teaching
-            WHERE subject_id = ?
-        """, selected)
-
-        if len(teaching) == 1:
-            return apology("registered subject", 400)
-        elif len(already) == 1:
-            return apology("another teacher already teachs this subject", 400)
-        else:
-            db.execute("""
-                INSERT INTO teaching (teacher_id, subject_id) 
-                VALUES(?, ?)
-            """, session["user_id"], selected)
-
-            return redirect("/")
-        
-    else:  
-
-        subjects = db.execute("""
-            SELECT subjects.id, subjects.name, departments.field, subjects.semester
-            FROM subjects 
-            JOIN departments ON subjects.department_id = departments.id
-        """)
-
-        return render_template("subjects.html", subjects=subjects)
 
 
 

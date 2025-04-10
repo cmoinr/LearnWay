@@ -554,3 +554,28 @@ social{
 .accordion-item {
     align-items: center;
 }
+
+#profile_img_input {
+    display: block;
+    height: 75px;
+    width: 100%;
+    background-color: #ffffff;
+    color: #080710;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 400;
+    align-items: center;
+    text-shadow: none;
+}
+
+label {
+    text-shadow: 1px 1px 5px black;
+}
+
+#file_name {
+    font-size: 10px;
+}
