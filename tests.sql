@@ -78,13 +78,24 @@
 
 -- DROP TABLE comments;
 
-CREATE TABLE comments (
-    id INTEGER,
+-- CREATE TABLE comments (
+--     id INTEGER,
+--     user_id INTEGER NOT NULL,
+--     course_id INTEGER NOT NULL,
+--     comment TEXT NOT NULL,
+--     rating INTEGER NOT NULL,
+--     PRIMARY KEY(id)
+--     FOREIGN KEY(user_id) REFERENCES users(id)
+--     FOREIGN KEY(course_id) REFERENCES courses(id)
+-- );
+
+-- DROP TABLE enrolled;
+
+CREATE TABLE enrolled (
     user_id INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
-    comment TEXT NOT NULL,
-    rating INTEGER NOT NULL,
-    PRIMARY KEY(id)
+    enrollment_date TEXT NOT NULL,
+    PRIMARY KEY(user_id, course_id)
     FOREIGN KEY(user_id) REFERENCES users(id)
     FOREIGN KEY(course_id) REFERENCES courses(id)
 );

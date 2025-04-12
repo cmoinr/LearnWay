@@ -43,17 +43,16 @@
     <!-- Botón para inscribirse -->
     <div class="container text-center mt-5">
         {% if session["user_id"] %}
-            <a href="/enroll" class="btn btn-primary btn-lg" id="btn_preview">Quiero inscribirme/acceder a este curso</a>
+            <a href="/enroll/{{ course_preview[0]['id'] }}" class="btn btn-primary btn-lg" id="btn_preview">Quiero inscribirme/acceder a este curso</a>
         {% else %}
-            <p class="text-danger">Debes iniciar sesión para inscribirte en este curso.</p>
-            <a href="/login" class="btn btn-secondary btn-lg" id="btn_preview">Iniciar sesión</a>
+            <p class="text-danger">Inicia sesión para inscribirte en este curso y dejar una reseña</p>
         {% endif %}
     </div>
 
     <!-- Sección de reseñas y comentarios -->
     <div class="course-reviews container mt-5">
-        <h3>Reseñas y comentarios</h3>
         {% if session["user_id"] %}
+            <h3>Deja tu reseña!</h3>
             <form class="form_comment" method="POST" action="/course_preview/{{ course_preview[0]['id'] }}">
                 <input type="hidden" name="course_id" value="{{ course_preview[0]['id'] }}">
                 <div class="mb-3">
@@ -72,23 +71,24 @@
                 </div>
                 <button type="submit">Enviar reseña</button>
             </form>
-        {% else %}
-            <p class="text-danger">Debes iniciar sesión para dejar una reseña.</p>
-            <a href="/login" class="btn btn-secondary" id="btn_preview">Iniciar sesión</a>
         {% endif %}
 
         <!-- Lista de reseñas existentes -->
         <div class="mt-4">
-            <h4>Reseñas de otros usuarios:</h4>
-            <ul class="list-group">
-                {% for comment in comments %}
-                    <li class="list-group-item">
-                        <strong>{{ comment['names'] }} {{ comment['surnames'] }}:</strong> 
-                        {{ comment['comment'] }} 
-                        <span class="badge bg-success">{{ comment['rating'] }}/5</span>
-                    </li>
-                {% endfor %}
-            </ul>
+            <h3>Reseñas de otros usuarios:</h3>
+            {% if comments %}
+                <ul class="list-group">
+                    {% for comment in comments %}
+                        <li class="list-group-item">
+                            <strong>{{ comment['names'] }} {{ comment['surnames'] }}:</strong> 
+                            {{ comment['comment'] }} 
+                            <span class="badge bg-success">{{ comment['rating'] }}/5</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Aún no hay comentarios sobre este curso. ¡Sé el primero en dejar una reseña!</p>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

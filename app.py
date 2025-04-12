@@ -1,11 +1,11 @@
-import os, requests, sqlite3, re, datetime, pytz
+import os, re, datetime, pytz
 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, url_for, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required
+from helpers import login_required
 
 # Configure application
 app = Flask(__name__)
@@ -64,17 +64,17 @@ def register():
 
         # Validations
         if not names or not surnames or not email or not password or not confirmation:
-            flash("All fields need to be filled", 'error')
+            flash("Todos los campos deben estar llenos.", 'error')
             return render_template("register.html", names=names, surnames=surnames, email=email, password=password, confirmation=confirmation)
         
         if not re.match(r"^[a-zA-Z]+$", names) or not re.match(r"^[a-zA-Z]+$", surnames):
-            flash("Invalid names/surnames", 'error')
+            flash("Nombres o apellidos inválidos.", 'error')
             return render_template("register.html", names=names, surnames=surnames, email=email, password=password, confirmation=confirmation)
         
         if password == confirmation:
             password = generate_password_hash(confirmation, method='scrypt', salt_length=16)            
         else:
-            flash("Both passwords don't match", 'error')
+            flash("Ambas contraseñas no coinciden.", 'error')
             return render_template("register.html", names=names, surnames=surnames, email=email, password=password, confirmation=confirmation)
         
         try:
@@ -82,10 +82,10 @@ def register():
                 INSERT INTO users (names, surnames, email, hash, profile_img)
                 VALUES(?, ?, ?, ?, ?)
             """, names, surnames, email, password, default_profile)     
-            flash("Successfully registered!", 'success')
+            flash("Has sido registrado exitosamente!", 'success')
             return redirect("/login")       
         except ValueError:
-            flash("Registered username", 'error')
+            flash("Ya te encuentras registrado. Inicia sesión!", 'error')
             return render_template("register.html", names=names, surnames=surnames, email=email, password=password, confirmation=confirmation)
 
     else:
@@ -104,17 +104,15 @@ def login():
         password = request.form.get("password")
 
         if not email or not password:
-            flash("All fields need to be filled", 'error')
+            flash("Todos los campos deben estar llenos.", 'error')
             return render_template("login.html", email=email, password=password)
-
-        # session["role"] = "student"
 
         # Query database for credentials
         user = db.execute("SELECT id, names, surnames, hash, profile_img FROM users WHERE email = ?", email)
 
         # Ensure username exists and password is correct
         if len(user) != 1 or not check_password_hash(user[0]["hash"], password):
-            flash("Invalid username and/or password", 'error')
+            flash("Contraseña o email inválidos.", 'error')
             return render_template("login.html", email=email, password=password)
         
         # Remember which user has logged in
@@ -139,7 +137,7 @@ def course_preview(course_id):
 
         # Validar que los campos no estén vacíos
         if not rating or not comment:
-            flash("All fields must be filled!", "error")
+            flash("Todos los campos deben estar llenos.", "error")
             return redirect(f"/course_preview/{course_id}")
 
         # Insertar la reseña en la base de datos
@@ -148,7 +146,7 @@ def course_preview(course_id):
             VALUES (?, ?, ?, ?)
         """, session["user_id"], course_id_form, comment, int(rating))
 
-        flash("Review submitted successfully!", "success")
+        flash("Reseña enviada exitosamente!", "success")
         return redirect(f"/course_preview/{course_id}")
 
     else:
@@ -161,7 +159,7 @@ def course_preview(course_id):
 
         # Validar si el curso existe
         if not course_preview:
-            flash("Course not found!", "error")
+            flash("Curso no encontrado.", "error")
             return redirect("/")
 
         # Obtener los módulos del curso
@@ -183,7 +181,7 @@ def course_preview(course_id):
         return render_template("course_preview.html", course_preview=course_preview, course_modules=course_modules, comments=comments)
 
 
-@app.route('/profile_settings', methods=['GET', 'POST'])
+@app.route("/profile_settings", methods=['GET', 'POST'])
 @login_required
 def profile_settings():
     if request.method == "POST":
@@ -268,223 +266,37 @@ def subjects():
             SELECT enrolled.course_id, courses.title, courses.card_description, courses.course_img
             FROM enrolled
             JOIN courses ON enrolled.course_id = courses.id
-            WHERE enrolled.course_id = ?
+            WHERE enrolled.user_id = ?
         """, session["user_id"])
 
         return render_template("my_learning.html", my_courses=my_courses)
 
 
-@app.route("/grades", methods=["GET", "POST"])
+@app.route("/enroll/<int:course_id>", methods=['GET'])
 @login_required
-def grades():
-    # List of students who are studying the selected subject
-    if request.method == "POST":
-        # Getting the grade provided by a teacher
-        grade = request.form.get("grade")
-        id_student = request.form.get("id_student")
-        id_subject = session.get("selected_subject")
+def enroll(course_id):
+    user_id = session["user_id"]
 
-        if not id_student or not grade:
-            return apology("incomplete data error", 400)
-        
-        if int(grade) >= 0 or int(grade) <= 10:
-            db.execute("""
-                UPDATE grades SET grade = ?, teacher_id = ?, date = ? 
-                WHERE student_id = ?
-                AND subject_id = ?
-            """, int(grade), session["user_id"], obtener_fecha_venezuela(), id_student, id_subject)
-        else:
-            return apology("wrong data error", 400)
+    # Verificar si el curso existe
+    course = db.execute("SELECT id FROM courses WHERE id = ?", course_id)
+    if len(course) == 0:
+        flash("El curso no existe.", "danger")
+        return redirect(url_for('index'))
 
-        return redirect("/grades")
-    
-    else:  
-        # List of students
-        list_students = db.execute("""
-            SELECT students.id, students.names, students.last_names, grades.grade
-            FROM studying
-            JOIN grades ON studying.student_id = grades.student_id AND studying.subject_id = grades.subject_id
-            JOIN students ON studying.student_id = students.id
-            WHERE studying.subject_id = ?
-        """, session.get("selected_subject"))
+    # Verificar si el usuario ya está inscrito
+    enrollment = db.execute(
+        "SELECT user_id FROM enrolled WHERE user_id = ? AND course_id = ?", user_id, course_id
+    )
+    if len(enrollment) >= 1:
+        flash("Ya estás inscrito en este curso.", "info")
+        return redirect(url_for('course_preview', course_id=course_id))
 
-        subject_name = db.execute("""
-            SELECT name FROM subjects WHERE id = ?
-        """, session.get("selected_subject"))
+    # Insertar el registro en la tabla "enrolled"
+    db.execute(
+        "INSERT INTO enrolled (user_id, course_id, enrollment_date) VALUES (?, ?, ?)",
+        user_id, course_id, obtener_fecha_venezuela()
+    )
 
-        return render_template("grades.html", list_students=list_students, subject_name=subject_name)
-    
+    flash("Te has inscrito exitosamente en el curso.", "success")
+    return redirect(url_for('course_preview', course_id=course_id))
 
-@app.route("/strategies_grades", methods=["GET", "POST"])
-@login_required
-def strategies_grades():
-    # Changing a specific strategy grade
-    if request.method == "POST":
-        # Getting the strategy's grade provided by a teacher
-        grade = request.form.get("grade")
-        student_id = request.form.get("student_id")
-        strtgy_id = request.form.get("strategy_id")
-
-        if not student_id or not grade:
-            return apology("incomplete data error", 400)
-        
-        if int(grade) >= 0 or int(grade) <= 10:
-            db.execute("""
-                UPDATE evaluated SET grade = ?
-                WHERE strategy_id = ?
-                AND student_id = ?
-            """, int(grade), strtgy_id, student_id)
-        else:
-            return apology("wrong data error", 400)
-
-        return redirect(url_for("strategies_grades"))
-    
-    else:  
-        strategy_id = request.args.get("strategy_id")
-        if strategy_id:
-            session["strategy_id"] = strategy_id
-        else:
-            strategy_id = session.get("strategy_id")
-
-        # List of students who must take this strategy
-        list_students = db.execute("""
-            SELECT evaluated.strategy_id, evaluated.student_id, students.names, students.last_names, evaluated.grade
-            FROM evaluated
-            JOIN students ON evaluated.student_id = students.id
-            WHERE evaluated.strategy_id = ?
-        """, session.get("strategy_id"))
-
-        strategy_selected = db.execute("""
-            SELECT type, topic, percentage, date
-            FROM strategies
-            WHERE id = ?
-        """, session.get("strategy_id"))
-
-        return render_template("strategies_grades.html", list_students=list_students, strategy_selected=strategy_selected)
-
-
-@app.route("/student")
-@login_required
-def student():
-    # Student main page
-    subjects = db.execute("""
-        SELECT subjects.name, subjects.semester, subjects.credits, grades.grade, teachers.names, teachers.last_names
-        FROM studying
-        JOIN subjects ON studying.subject_id = subjects.id
-        JOIN grades ON studying.student_id = grades.student_id AND studying.subject_id = grades.subject_id
-        JOIN teaching ON studying.subject_id = teaching.subject_id
-        JOIN teachers ON teaching.teacher_id = teachers.id
-        WHERE studying.student_id = ?
-    """, session["user_id"])
-
-    learner = db.execute("""
-        SELECT names, last_names FROM students WHERE id = ?
-    """, session["user_id"])
-
-    return render_template("student.html", subjects=subjects, learner=learner)
-
-
-@app.route("/add_subjects", methods=["GET", "POST"])
-@login_required
-def add_subjects():
-    if request.method == "POST":
-
-        adding = request.form.get("selected")
-
-        # Checking if there's a teacher teaching that subject
-        teaching = db.execute("""
-            SELECT teacher_id
-            FROM teaching
-            WHERE subject_id = ?     
-        """, adding)
-
-        # Checking if student already enrolled the subject
-        subjects = db.execute("""
-            SELECT subject_id
-            FROM studying
-            WHERE student_id = ?
-            AND subject_id = ?
-        """, session["user_id"], adding)
-
-        if len(teaching) == 0:
-            return apology("there's no teacher yet", 400)
-        elif len(subjects) == 1:
-            return apology("registered subject", 400)
-        else:
-            db.execute("""
-                INSERT INTO studying (student_id, subject_id) VALUES (?, ?)
-            """, session["user_id"], adding)
-
-            db.execute("""
-                INSERT INTO grades (student_id, subject_id, grade, teacher_id) VALUES (?, ?, ?, ?)
-            """, session["user_id"], adding, 0, teaching[0]["teacher_id"])
-            
-            flash("Subject added!", "success")
-            return redirect("/student")
-    
-    else:   
-            
-        subjects_available = db.execute("""
-            SELECT subjects.id, subjects.name, subjects.semester, subjects.credits
-            FROM subjects
-            JOIN students ON subjects.department_id = students.department_id
-            WHERE students.id = ?
-        """, session["user_id"])
-
-        return render_template("add_subjects.html", subjects_available=subjects_available)
-
-
-
-
-
-
-@app.route("/edit_pass", methods=["GET", "POST"])
-@login_required
-def edit_pass():
-    if request.method == "POST":
-        old = request.form.get("old_password")
-        new = request.form.get("new_password")
-        again = request.form.get("new_pass_again")
-
-        if not old or not new or not again:
-            return apology("all fields need to be filled", 400)
-
-
-        if session["role"] == "student":
-            update = db.execute("SELECT pw FROM students WHERE id = ?", session["user_id"])
-            print(update)
-            if check_password_hash(update[0]['pw'], old):
-                if new == again:
-                    new = generate_password_hash(again, method='scrypt', salt_length=16)
-                    db.execute("UPDATE students SET pw = ? WHERE id = ?", new, session["user_id"])
-                else:
-                    return apology("both passwords don't match", 400)
-            else:
-                return apology("incorrect password", 403)
-            
-            flash('Password changed!', 'success')
-            return redirect('/student')
-            
-        elif session["role"] == "teacher":
-            update = db.execute("SELECT pw FROM teachers WHERE id = ?", session["user_id"])
-
-            if check_password_hash(update[0]['pw'], old):
-                if new == again:
-                    new = generate_password_hash(again, method='scrypt', salt_length=16)
-                    db.execute("UPDATE teachers SET pw = ? WHERE id = ?", new, session["user_id"])
-                else:
-                    return apology("both passwords don't match", 400)
-            else:
-                return apology("incorrect password", 403)
-            
-            flash('Password changed!', 'success')
-            return redirect('/')
-
-    else:
-        return render_template("edit_pass.html")
-
-
-@app.route("/settings")
-@login_required
-def settings():
-    return render_template("settings.html")

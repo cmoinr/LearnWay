@@ -6,6 +6,8 @@
 
 {% block main %}
     <form class="form_page" method="POST" action="/register">
+        <h3>Regístrate!</h3>
+
         <input type="text"      id="names"          name="names"        value="{{ request.form.get('names', '') }}"         placeholder="Names">
         <input type="text"      id="surnames"       name="surnames"     value="{{ request.form.get('surnames', '') }}"      placeholder="Surnames">
         <input type="email"     id="email"          name="email"        value="{{ request.form.get('email', '') }}"         placeholder="Email">
